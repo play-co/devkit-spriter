@@ -35,10 +35,6 @@ ImageBuffer.prototype.load = function () {
   return this._onLoad;
 };
 
-ImageBuffer.prototype.drawImageJava = function (imageBuffer, dx, dy, dx2, dy2, sx, sy, sx2, sy2) {
-  this.drawImage(imageBuffer, sx, sy, sx2 - sx, sy2 - sy, dx, dy, dx2 - dx, dy2 - dy);
-};
-
 ImageBuffer.prototype.drawImage = function (imageBuffer, sx, sy, sw, sh, dx, dy, dw, dh) {
   sx = sx || 0;
   sy = sy || 0;
@@ -49,11 +45,15 @@ ImageBuffer.prototype.drawImage = function (imageBuffer, sx, sy, sw, sh, dx, dy,
   dw = dw === undefined ? sw : dw;
   dh = dh === undefined ? sh : dh;
 
-  if (dx >= this.bitmap.width || dy >= this.bitmap.height || dx < 0 || dy < 0) { return; }
+  // for spriting, we only try to draw out of bounds for padding
+  if (dx >= this.bitmap.width || dy >= this.bitmap.height || dx < 0 || dy < 0) {
+    if (dw !== 1 && dh !== 1) {
+      throw new Error('Unexpected spriting state');
+    }
+    return;
+  }
 
   if (dw != sw || dh != sh) {
-    console.warn("[warn] scaling ", sw, '->', dw, sh, '->', dh);
-
     this.drawImage(new Jimp(imageBuffer.raw)
       .crop(sx, sy, sw, sh)
       .resize(dw, dh), 0, 0, dw, dh, dx, dy, dw, dh);

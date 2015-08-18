@@ -70,59 +70,63 @@ Spritesheet.prototype.write = function (filename) {
 Spritesheet.prototype.blit = function (img, x, y) {
   var pad = this.pad;
 
-  //dest params, with dx2 / dy2 being exclusive
+  // dest params, with dx2 / dy2 being exclusive
   var dx = x;
   var dy = y;
+  var dw = img.contentWidth;
+  var dh = img.contentHeight;
   var dx2 = x + img.contentWidth;
   var dy2 = y + img.contentHeight;
 
-  //source params, with sx2 / sy2 being exclusive
+  // source params, with sx2 / sy2 being exclusive
   var sx = img.margin.left;
   var sy = img.margin.top;
+  var sw = img.contentWidth;
+  var sh = img.contentHeight;
   var sx2 = sx + img.contentWidth;
   var sy2 = sy + img.contentHeight;
 
   for (var i = 1; i <= pad; i++) {
-    //top-left
-    this.image.drawImageJava(img.raw,
-        dx - i, dy - i, dx - i + 1, dy - i + 1,
-        sx, sy, sx + 1, sy + 1);
+    // top-left
+    this.image.drawImage(img.raw,
+        sx, sy, 1, 1,
+        dx - i, dy - i, 1, 1
+      );
 
-    //top
-    this.image.drawImageJava(img.raw,
-        dx, dy - i, dx2, dy - i + 1,
-        sx, sy, sx2, sy + 1);
+    // top
+    this.image.drawImage(img.raw,
+        sx, sy, sw, 1,
+        dx, dy - i, dw, 1);
 
-    //top-right
-    this.image.drawImageJava(img.raw,
-        dx2 + i - 1, dy - i, dx2 + i, dy -i + 1,
-        sx2 - 1, sy, sx2, sy + 1);
+    // top-right
+    this.image.drawImage(img.raw,
+        sx2 - 1, sy, 1, 1,
+        dx2 + i - 1, dy - i, 1, 1);
 
-    //right
-    this.image.drawImageJava(img.raw,
-        dx2 + i - 1, dy, dx2 + i, dy2,
-        sx2 - 1, sy, sx2, sy2);
+    // right
+    this.image.drawImage(img.raw,
+        sx2 - 1, sy, 1, sh,
+        dx2 + i - 1, dy, 1, dh);
 
-    //bottom-right
-    this.image.drawImageJava(img.raw,
-        dx2 + i - 1, dy2 + i - 1, dx2 + i, dy2 + i,
-        sx2 - 1, sy2 - 1, sx2, sy2);
+    // bottom-right
+    this.image.drawImage(img.raw,
+        sx2 - 1, sy2 - 1, 1, 1,
+        dx2 + i - 1, dy2 + i - 1, 1, 1);
 
-    //bottom
-    this.image.drawImageJava(img.raw,
-        dx, dy2 + i - 1, dx2, dy2 + i,
-        sx, sy2 - 1, sx2, sy2);
+    // bottom
+    this.image.drawImage(img.raw,
+        sx, sy2 - 1, sw, 1,
+        dx, dy2 + i - 1, dw, 1);
 
-    //bottom-left
-    this.image.drawImageJava(img.raw,
-        dx - i, dy2 + i - 1, dx - i + 1, dy2 + i,
-        sx, sy2 - 1, sx + 1, sy2);
+    // bottom-left
+    this.image.drawImage(img.raw,
+        sx, sy2 - 1, 1, 1,
+        dx - i, dy2 + i - 1, 1, 1);
 
-    //left
-    this.image.drawImageJava(img.raw,
-        dx - i, dy, dx - i + 1, dy2,
-        sx, sy, sx + 1, sy2);
-
+    // left
+    this.image.drawImage(img.raw,
+        sx, sy, 1, dh,
+        dx - i, dy, 1, dh);
   }
 
   var xOdd = ((pad + dx2) & 0x1) !== 0;
@@ -130,42 +134,41 @@ Spritesheet.prototype.blit = function (img, x, y) {
 
   // extend the right side
   if (xOdd) {
-    //top-right
-    this.image.drawImageJava(img.raw,
-        dx2 + pad, dy - pad, dx2 + pad + 1, dy - pad + 1,
-        sx2 - 1, sy, sx2, sy + 1);
+    // top-right
+    this.image.drawImage(img.raw,
+        sx2 - 1, sy, 1, 1,
+        dx2 + pad, dy - pad, 1, 1);
 
-    //right
-    this.image.drawImageJava(img.raw,
-        dx2 + pad, dy, dx2 + pad + 1, dy2,
-        sx2 - 1, sy, sx2, sy2);
-
+    // right
+    this.image.drawImage(img.raw,
+        sx2 - 1, sy, 1, sh,
+        dx2 + pad, dy, 1, dh);
   }
   // extend the bottom
   if (yOdd) {
-    //bottom
-    this.image.drawImageJava(img.raw,
-        dx, dy2 + pad, dx2, dy2 + pad + 1,
-        sx, sy2 - 1, sx2, sy2);
+    // bottom
+    this.image.drawImage(img.raw,
+        sx, sy2 - 1, sw, 1,
+        dx, dy2 + pad, dw, 1);
 
-    //bottom-left
-    this.image.drawImageJava(img.raw,
-        dx - pad, dy2 + pad, dx - pad + 1, dy2 + pad + 1,
-        sx, sy2 - 1, sx + 1, sy2);
+    // bottom-left
+    this.image.drawImage(img.raw,
+        sx, sy2 - 1, 1, 1,
+        dx - pad, dy2 + pad, 1, 1);
   }
 
   // extend the bottom right
   if (yOdd && xOdd) {
-    //bottom-right
-    this.image.drawImageJava(img.raw,
-        dx2 + pad, dy2 + pad, dx2 + pad + 1, dy2 + pad + 1,
-        sx2 - 1, sy2 - 1, sx2, sy2);
+    // bottom-right
+    this.image.drawImage(img.raw,
+        sx2 - 1, sy2 - 1, 1, 1,
+        dx2 + pad, dy2 + pad, 1, 1);
   }
 
-  //inside
-  this.image.drawImageJava(img.raw,
-      dx, dy, dx2, dy2,
-      sx, sy, sx2, sy2);
+  // inside
+  this.image.drawImage(img.raw,
+      sx, sy, sw, sh,
+      dx, dy, dw, dh);
 };
 
 Spritesheet.prototype.toJSON = function () {
