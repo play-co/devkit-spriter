@@ -31,10 +31,17 @@ new ImageLoader()
     new Spriter()
       .on('sheet', function (sheet) {
         spritesheets.push(sheet);
+        sheet.name = 'spritetest-' + sheetNumber++;
         sheet.composite();
-        sheet.write('spritesheets/spritetest-' + sheetNumber++ + '.png');
+        sheet.write('spritesheets/' + sheet.name + '.png')
+          .then(function () {
+            sheet.recycle();
+            sheet.recycleSprites();
+          });
       })
       .sprite(images);
+
+    console.log(JSON.stringify(spritesheets));
 
     console.log("sprited", Date.now() - startLoad + 'ms');
   });

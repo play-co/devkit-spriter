@@ -3,9 +3,12 @@ var crypto = require('crypto');
 module.exports = ImageInfo;
 
 function ImageInfo(filename, buffer) {
+  this.x = 0;
+  this.y = 0;
+
   this.filename = filename;
   this.hash = crypto.createHash('md5').update(buffer.bitmap.data).digest('hex');
-  this.raw = buffer;
+  this.buffer = buffer;
   this.width = buffer.bitmap.width;
   this.height = buffer.bitmap.height;
   this.area = this.width * this.height;
@@ -21,8 +24,13 @@ function ImageInfo(filename, buffer) {
   this.contentArea = this.contentWidth * this.contentHeight;
 }
 
+ImageInfo.prototype.recycle = function () {
+  this.buffer = null;
+};
+
 ImageInfo.prototype.toJSON = function () {
   return {
+      f: this.filename,
       x: this.x,
       y: this.y,
       w: this.width,

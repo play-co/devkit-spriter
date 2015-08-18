@@ -75,3 +75,9 @@ ImageBuffer.prototype.drawImage = function (imageBuffer, sx, sy, sw, sh, dx, dy,
     }
   }
 };
+
+ImageBuffer.prototype.write = function (filename) {
+  return new Promise(function (resolve) {
+      Jimp.prototype.write.call(this, filename, resolve);
+    }.bind(this));
+};
