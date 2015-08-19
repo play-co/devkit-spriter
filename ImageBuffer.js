@@ -1,22 +1,23 @@
 var Jimp = require('jimp');
 var Promise = require('bluebird');
+var fs = require('graceful-fs');
+fs.gracefulify(require('fs'));
 
 module.exports = ImageBuffer;
 
 function ImageBuffer(opts) {
   var onLoad = function (err) {
     if (err) {
-      this._reject();
+      this._reject(err);
     } else {
-      this._resolve();
+      this._resolve(this);
     }
-  };
+  }.bind(this);
 
   this._onLoad = new Promise(function (resolve, reject) {
       this._resolve = resolve;
       this._reject = reject;
-    }.bind(this))
-    .bind(this);
+    }.bind(this));
 
   if ('width' in opts) {
     Jimp.call(this, opts.width, opts.height, onLoad);
@@ -48,7 +49,7 @@ ImageBuffer.prototype.drawImage = function (imageBuffer, sx, sy, sw, sh, dx, dy,
   // for spriting, we only try to draw out of bounds for padding
   if (dx >= this.bitmap.width || dy >= this.bitmap.height || dx < 0 || dy < 0) {
     if (dw !== 1 && dh !== 1) {
-      throw new Error('Unexpected spriting state');
+      // throw new Error('Unexpected spriting state');
     }
     return;
   }
@@ -79,5 +80,17 @@ ImageBuffer.prototype.drawImage = function (imageBuffer, sx, sy, sw, sh, dx, dy,
 ImageBuffer.prototype.write = function (filename) {
   return new Promise(function (resolve) {
       Jimp.prototype.write.call(this, filename, resolve);
+    }.bind(this));
+};
+
+ImageBuffer.prototype.getBuffer = function (mime) {
+  return new Promise(function (resolve, reject) {
+      Jimp.prototype.getBuffer.call(this, mime, function (err, res) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(res);
+        }
+      });
     }.bind(this));
 };

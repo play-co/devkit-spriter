@@ -3,6 +3,7 @@ var ImageBuffer = require('./ImageBuffer');
 module.exports = Spritesheet;
 
 function Spritesheet(opts) {
+  this.name = opts && opts.name || '';
   this.pad = opts && opts.pad || 2;
   this.maxSize = opts && opts.maxSize || 1024;
   this._width = 0;
@@ -48,6 +49,8 @@ Spritesheet.prototype.add = function (imageInfo, x, y) {
   if (y + imageInfo.contentHeight > this._height) {
     this._height = x + imageInfo.contentWidth;
   }
+
+  return this;
 };
 
 Spritesheet.prototype.composite = function () {
@@ -59,16 +62,21 @@ Spritesheet.prototype.composite = function () {
   this.sprites.forEach(function (sprite) {
     this.blit(sprite);
   }, this);
+
+  return this;
 };
 
 Spritesheet.prototype.recycle = function () {
   this.buffer = null;
+  this.recycleSprites();
+  return this;
 };
 
 Spritesheet.prototype.recycleSprites = function () {
   this.sprites.forEach(function (sprite) {
     sprite.recycle();
   });
+  return this;
 };
 
 Spritesheet.prototype.write = function (filename) {
