@@ -47,7 +47,7 @@ Spritesheet.prototype.add = function (imageInfo, x, y) {
   }
 
   if (y + imageInfo.contentHeight > this._height) {
-    this._height = x + imageInfo.contentWidth;
+    this._height = y + imageInfo.contentHeight;
   }
 
   return this;

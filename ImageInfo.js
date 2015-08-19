@@ -28,22 +28,6 @@ ImageInfo.prototype.recycle = function () {
   this.buffer = null;
 };
 
-ImageInfo.prototype.toJSON = function () {
-  return {
-      f: this.filename,
-      x: this.x,
-      y: this.y,
-      w: this.width,
-      h: this.height,
-      t: this.margin.top || undefined,
-      l: this.margin.left || undefined,
-      b: this.margin.bottom || undefined,
-      r: this.margin.right || undefined,
-      s: !this.scale || this.scale == 1 ? undefined : this.scale,
-      g: this.group || undefined, // TODO: groups?
-    };
-};
-
 ImageInfo.prototype.getScaledContentSize = function () {
   var scale = this.scale;
   var x = this.margin.left * scale | 0;
@@ -96,6 +80,22 @@ ImageInfo.prototype.computeMargins = function() {
     bottom: marginBottom,
     left: marginLeft
   };
+};
+
+ImageInfo.prototype.toJSON = function () {
+  return {
+      f: this.filename,
+      x: this.x,
+      y: this.y,
+      w: this.contentWidth,
+      h: this.contentHeight,
+      t: this.margin.top || undefined,
+      l: this.margin.left || undefined,
+      b: this.margin.bottom || undefined,
+      r: this.margin.right || undefined,
+      s: !this.scale || this.scale == 1 ? undefined : this.scale,
+      g: this.group || undefined, // TODO: groups?
+    };
 };
 
 function isColumnTransparent(column, data, rows, cols) {
