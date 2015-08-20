@@ -74,9 +74,15 @@ DiskCache.prototype.get = function (key, filenames) {
       }
     })
     .map(function (sheet) {
-      if (!sheet || !sheet.name) {
+      if (!sheet || !sheet.name || !sheet.sprites) {
         throw new NotCachedError();
       }
+
+      sheet.sprites.forEach(function (info) {
+        if (!info.f || !(info.f in cache.mtime)) {
+          throw new NotCachedError();
+        }
+      });
 
       // for the destination files, just check that each file exists
       var filename = path.join(this._outputDirectory, sheet.name);
@@ -87,14 +93,14 @@ DiskCache.prototype.get = function (key, filenames) {
         });
     })
     .then(function () {
-      return cache.value;
+      return JSON.parse(JSON.stringify(cache.value));
     });
 };
 
 DiskCache.prototype.set = function (key, value) {
   var cache = this._data[key];
   if (cache) {
-    cache.value = value;
+    cache.value = JSON.parse(JSON.stringify(value));
   }
 };
 
