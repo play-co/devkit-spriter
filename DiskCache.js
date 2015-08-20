@@ -33,7 +33,7 @@ module.exports.load = function (filename, outputDirectory) {
     });
 };
 
-function NotCachedError() { this.message = 'not cached'; }
+function NotCachedError(message) { Error.call(this, message); }
 NotCachedError.prototype = Object.create(Error.prototype);
 NotCachedError.prototype.constructor = NotCachedError;
 
@@ -71,7 +71,9 @@ DiskCache.prototype.get = function (key, filenames) {
       // validate no new files were added to the group since the last spriting
       for (var filename in currentMtime) {
         if (!(filename in previousMtime)) {
-          throw new NotCachedError();
+          throw new NotCachedError('new file: ' + filename);
+        } else if (previousMtime[filename] != currentMtime[filename]) {
+          throw new NotCachedError('file updated: ' + filename);
         } else {
           delete previousMtime[filename];
         }
@@ -79,7 +81,7 @@ DiskCache.prototype.get = function (key, filenames) {
 
       // validate no files were removed from the group since the last spriting
       for (var key in previousMtime) {
-        throw new NotCachedError();
+        throw new NotCachedError('removed file: ' + key);
       }
 
       var sheets = cache.value;
@@ -87,20 +89,21 @@ DiskCache.prototype.get = function (key, filenames) {
       return Promise.map(sheets, function (sheet) {
           // validate sheet has a name and sprites
           if (!sheet || !sheet.name || !sheet.sprites) {
-            throw new NotCachedError();
+            throw new NotCachedError('cache corrupted: missing sheet');
           }
 
           // validate sheet sprites are in the mtime hash
           sheet.sprites.forEach(function (info) {
             if (!info.f || !(info.f in cache.mtime)) {
-              throw new NotCachedError();
+              throw new NotCachedError('cache corrupted: missing filename');
             }
           });
 
           // validate sheet exists
-          return exists(path.join(outputDirectory, sheet.name))
+          var sheetFilename = path.join(outputDirectory, sheet.name);
+          return exists(sheetFilename)
             .catch(function (e) {
-              throw new NotCachedError();
+              throw new NotCachedError('spritesheet missing: ' + sheetFilename);
             });
         });
     })
