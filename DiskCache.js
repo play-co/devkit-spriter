@@ -45,51 +45,63 @@ function DiskCache(filename, data, outputDirectory) {
 
 DiskCache.prototype.get = function (key, filenames) {
   var cache = this._data[key];
-  var isCached = true;
   if (!cache) {
     cache = this._data[key] = {
       mtime: {}
     };
   }
 
+  var currentMtime = {};
   return Promise
     .resolve(filenames)
     .bind(this)
     .map(function (filename) {
-      var cachedMtime = cache.mtime[filename] || 0;
+      // compute all new mtimes
       return stat(filename)
         .then(function (stat) {
-          var mtime = stat.mtime.getTime();
-          if (mtime > cachedMtime) {
-            isCached = false;
-            cache.mtime[filename] = mtime;
-          }
+          currentMtime[filename] = stat.mtime.getTime();
         });
     })
     .then(function () {
-      if (isCached) {
-        return cache.value;
-      } else {
-        throw new NotCachedError();
-      }
-    })
-    .map(function (sheet) {
-      if (!sheet || !sheet.name || !sheet.sprites) {
-        throw new NotCachedError();
-      }
+      // set cache to current mtimes, when cache gets written it will have the
+      // lastest values
+      var previousMtime = cache.mtime;
+      cache.mtime = currentMtime;
 
-      sheet.sprites.forEach(function (info) {
-        if (!info.f || !(info.f in cache.mtime)) {
+      // validate no new files were added to the group since the last spriting
+      for (var filename in currentMtime) {
+        if (!(filename in previousMtime)) {
           throw new NotCachedError();
+        } else {
+          delete previousMtime[filename];
         }
-      });
+      }
 
-      // for the destination files, just check that each file exists
-      var filename = path.join(this._outputDirectory, sheet.name);
-      return exists(filename)
-        .catch(function () {
-          console.log(sheet.name, 'does not exist');
-          throw new NotCachedError();
+      // validate no files were removed from the group since the last spriting
+      for (var key in previousMtime) {
+        throw new NotCachedError();
+      }
+
+      var sheets = cache.value;
+      var outputDirectory = this._outputDirectory;
+      return Promise.map(sheets, function (sheet) {
+          // validate sheet has a name and sprites
+          if (!sheet || !sheet.name || !sheet.sprites) {
+            throw new NotCachedError();
+          }
+
+          // validate sheet sprites are in the mtime hash
+          sheet.sprites.forEach(function (info) {
+            if (!info.f || !(info.f in cache.mtime)) {
+              throw new NotCachedError();
+            }
+          });
+
+          // validate sheet exists
+          return exists(path.join(outputDirectory, sheet.name))
+            .catch(function (e) {
+              throw new NotCachedError();
+            });
         });
     })
     .then(function () {
