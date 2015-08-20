@@ -193,9 +193,10 @@ Spritesheet.prototype.blit = function (img) {
 
 Spritesheet.prototype.toJSON = function () {
   return {
-      w: this.width,
-      h: this.height,
-      d: this.sprites.map(function (sprite) {
+      name: this.name,
+      width: this.width,
+      height: this.height,
+      sprites: this.sprites.map(function (sprite) {
         return sprite.toJSON();
       })
     };

@@ -68,24 +68,38 @@ DiskCache.prototype.get = function (key, filenames) {
     })
     .then(function () {
       if (isCached) {
-        return Object.keys(cache.value);
+        return cache.value;
       } else {
         throw new NotCachedError();
       }
     })
-    .map(function (sheetname) {
+    .map(function (sheet) {
+      if (!sheet || !sheet.name) {
+        throw new NotCachedError();
+      }
+
       // for the destination files, just check that each file exists
-      var filename = path.join(this._outputDirectory, sheetname);
-      return exists(filename);
+      var filename = path.join(this._outputDirectory, sheet.name);
+      return exists(filename)
+        .catch(function () {
+          console.log(sheet.name, 'does not exist');
+          throw new NotCachedError();
+        });
     })
-    .catch(function () {
-      throw new NotCachedError();
+    .then(function () {
+      return cache.value;
     });
 };
 
 DiskCache.prototype.set = function (key, value) {
   var cache = this._data[key];
-  cache.value = value;
+  if (cache) {
+    cache.value = value;
+  }
+};
+
+DiskCache.prototype.remove = function (key) {
+  delete this._data[key];
 };
 
 DiskCache.prototype.save = function () {

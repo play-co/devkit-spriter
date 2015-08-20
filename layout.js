@@ -6,7 +6,7 @@ var DEFAULT_PADDING = 2;
 /**
  * @returns {Spritesheet[]}
  */
-module.exports = function (name, images, opts) {
+module.exports = function (images, opts) {
   var maxSize = opts && opts.maxSize || DEFAULT_MAX_SIZE;
   var padding = opts && opts.padding || DEFAULT_PADDING;
 
@@ -14,13 +14,19 @@ module.exports = function (name, images, opts) {
   var sheet = new Spritesheet();
   var sheetIndex = 1;
 
+  var name = opts.name || '';
+  var ext = opts.ext || '';
+  function nextName() {
+    return name + sheetIndex++ + ext;
+  }
+
   // handle large images
   images = images.filter(function (image) {
     if (image.contentWidth <= maxSize && image.contentHeight <= maxSize) {
       return true;
     }
 
-    sheets.push(new Spritesheet({name: name + sheetIndex++}).add(image, 0, 0));
+    sheets.push(new Spritesheet({name: nextName()}).add(image, 0, 0));
     return false;
   }, this);
 
@@ -106,7 +112,7 @@ module.exports = function (name, images, opts) {
     }
 
     if (sheet.length > 0 ) {
-      sheet.name = name + sheetIndex++;
+      sheet.name = nextName();
       sheets.push(sheet);
       sheet = new Spritesheet();
     }

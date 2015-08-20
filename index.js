@@ -15,3 +15,5 @@ exports.sprite = layout;
 exports.loadCache = function (cacheFile, outputDirectory) {
   return DiskCache.load(cacheFile, outputDirectory);
 };
+
+exports.NotCachedError = DiskCache.NotCachedError;
