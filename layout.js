@@ -7,17 +7,23 @@ var DEFAULT_PADDING = 2;
  * @returns {Spritesheet[]}
  */
 module.exports = function (images, opts) {
-  var maxSize = opts && opts.maxSize || DEFAULT_MAX_SIZE;
-  var padding = opts && opts.padding || DEFAULT_PADDING;
-
-  var sheets = [];
-  var sheet = new Spritesheet();
-  var sheetIndex = 1;
-
+  if (!opts) { opts = {}; }
+  var maxSize = opts.maxSize !== undefined ? opts.maxSize : DEFAULT_MAX_SIZE;
+  var padding = opts.padding !== undefined ? opts.padding : DEFAULT_PADDING;
+  var powerOfTwoSheets = opts.powerOfTwoSheets !== undefined ? !!opts.powerOfTwoSheets : true;
   var name = opts.name || '';
   var ext = opts.ext || '';
-  function nextName() {
-    return name + sheetIndex++ + ext;
+
+  var sheets = [];
+  var sheetIndex = 1;
+  var sheet = createSpritesheet();
+
+  function createSpritesheet() {
+    return new Spritesheet({
+      name: name + (sheetIndex++) + ext,
+      padding: padding,
+      powerOfTwoSheets: powerOfTwoSheets
+    });
   }
 
   // handle large images
@@ -26,7 +32,7 @@ module.exports = function (images, opts) {
       return true;
     }
 
-    sheets.push(new Spritesheet({name: nextName()}).add(image, 0, 0));
+    sheets.push(createSpritesheet().add(image, 0, 0));
     return false;
   }, this);
 
@@ -112,9 +118,8 @@ module.exports = function (images, opts) {
     }
 
     if (sheet.length > 0 ) {
-      sheet.name = nextName();
       sheets.push(sheet);
-      sheet = new Spritesheet();
+      sheet = createSpritesheet();
     }
   }
 

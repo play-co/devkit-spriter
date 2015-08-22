@@ -3,9 +3,9 @@ var ImageBuffer = require('./ImageBuffer');
 module.exports = Spritesheet;
 
 function Spritesheet(opts) {
-  this.name = opts && opts.name || '';
-  this.pad = opts && opts.pad || 2;
-  this.maxSize = opts && opts.maxSize || 1024;
+  this.name = opts.name;
+  this.padding = opts.padding;
+  this.powerOfTwoSheets = !!opts.powerOfTwoSheets;
   this._width = 0;
   this._height = 0;
 
@@ -26,12 +26,12 @@ Object.defineProperties(Spritesheet.prototype, {
   },
   'width': {
     'get': function () {
-      return powerOfTwo(this._width);
+      return this.powerOfTwoSheets ? powerOfTwo(this._width) : this._width;
     }
   },
   'height': {
     'get': function () {
-      return powerOfTwo(this._height);
+      return this.powerOfTwoSheets ? powerOfTwo(this._height) : this._height;
     }
   }
 });
@@ -84,7 +84,7 @@ Spritesheet.prototype.write = function (filename) {
 };
 
 Spritesheet.prototype.blit = function (img) {
-  var pad = this.pad;
+  var pad = this.padding;
 
   // dest params, with dx2 / dy2 being exclusive
   var dx = img.x;
