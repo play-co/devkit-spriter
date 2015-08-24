@@ -43,10 +43,10 @@ function DiskCache(filename, data, outputDirectory) {
   this._outputDirectory = outputDirectory;
 }
 
-DiskCache.prototype.get = function (key, filenames) {
-  var cache = this._data[key];
+DiskCache.prototype.get = function (group, filenames) {
+  var cache = this._data[group];
   if (!cache) {
-    cache = this._data[key] = {
+    cache = this._data[group] = {
       mtime: {}
     };
   }
@@ -80,8 +80,8 @@ DiskCache.prototype.get = function (key, filenames) {
       }
 
       // validate no files were removed from the group since the last spriting
-      for (var key in previousMtime) {
-        throw new NotCachedError('removed file: ' + key);
+      for (var filename in previousMtime) {
+        throw new NotCachedError('file removed: ' + filename);
       }
 
       var sheets = cache.value;
@@ -112,15 +112,15 @@ DiskCache.prototype.get = function (key, filenames) {
     });
 };
 
-DiskCache.prototype.set = function (key, value) {
-  var cache = this._data[key];
+DiskCache.prototype.set = function (group, value) {
+  var cache = this._data[group];
   if (cache) {
     cache.value = JSON.parse(JSON.stringify(value));
   }
 };
 
-DiskCache.prototype.remove = function (key) {
-  delete this._data[key];
+DiskCache.prototype.remove = function (group) {
+  delete this._data[group];
 };
 
 DiskCache.prototype.save = function () {

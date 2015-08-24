@@ -14,9 +14,7 @@ function ImageInfo(filename, buffer) {
   this.area = this.width * this.height;
   this.data = buffer.bitmap.data;
   this.depth = this.data.length / this.area;
-  if (this.depth == 4) {
-    this.hasAlphaChannel = true;
-  }
+  this.hasAlphaChannel = (this.depth == 4);
 
   this.margin = this.computeMargins();
   this.contentWidth = this.width - this.margin.left - this.margin.right;
