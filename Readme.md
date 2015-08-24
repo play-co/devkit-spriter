@@ -1,291 +1,99 @@
-#Spriter
+# devkit-spriter
 
-####Index  
+The devkit-spriter package provides three functions for the devkit build process:
 
--  <a href="#about">About the metadata.json file</a>
--  <a href="#examples">Examples</a>
--  <a href="#api">API</a>
+ 1. loading images
+ 2. spriting images into spritesheets
+ 3. caching spritesheets
 
-<a name="about"></a>
-##About the metadata.json file 
+## Loading Images
 
-The `metadata.json` file is a JSON file that is placed inside any directory that is to be sprited (or one that you'd like to filter in some way by the spriter) which applies rules and options recursively unless another `metadata.json` file overwrites its options down the directory structure.
+To load images, use the `loadImages(filenames : String[]) :
+Promise<ImageInfo[]>` function:
 
-Here is one example of how a `metadata.json` may look :
+    var spriter = require('devkit-spriter');
+    spriter.loadImages(['image1.png', 'image2.png'])
+        .then(function (images) {
+            // images is an array of ImageInfo objects
+        });
 
-~~~
-{
-	"rules": [
-		{
-			"cond-target": "browser-mobile",
-			package: false
-		},
-		{
-			"cond-target": "native-android",
-			"cond-fileList": ["bar/baz.png", "foo.png"],
-			"forceJpeg": true
-		}
+An `ImageInfo` object is a representation of an image that the spriter can use
+to create spritesheets.  It has the following properites:
 
-	]
+ - `x : int` the location of the image in a spritesheet
+ - `y : int` the location of the image in a spritesheet
+ - `filename : string` the full path to the image on disk
+ - `hash : string` an md5 hash of the image bitmap
+ - `buffer : ImageBuffer` the pixels of the image wrapped in a Jimp object
+   (see https://github.com/oliver-moran/jimp). An ImageBuffer extends the Jimp
+   base class with a `drawImage` call (based on the HTML5 canvas `drawImage`
+   call and promisifies `getBuffer` and `write`.
+ - `width : int` the original image width
+ - `height : int` the original image height
+ - `area : int` the image's area
+ - `data : Buffer` the raw data in a node `Buffer`, alias for `buffer.bitmap.data`
+ - `depth : int` the number of channels for the image, e.g. 4 for rgba
+ - `hasAlphaChannel : boolean` true if the depth is 4
+ - `margin : {top : int, right : int, bottom : int, left : int}` the size of
+   the margins around the image (transparent regions in original image)
+ - `contentWidth : int` the width minus the margins
+ - `contentHeight : int` the height minus the margins
+ - `contentArea : int` the content area, the number of pixels this image will
+   occupy on a spritesheet (excluding spritesheet padding)
 
-}
-~~~  
-*This metadata.json states that on browser-mobile builds to
-not package any files in this directory (or below), and for 
-native-android, force the given files to be jpegs*
+## Spriting images
 
+To sprite images, first load them into ImageInfo objects.  Then call
+`layout(ImageInfo[], opts) : Spritesheet[]`:
 
-The `metadata.json` file is essentially a compilation of **rules** which define how the current directory (and below) should be sprited (or not sprited) or treated.
+    var spritesheets = spriter.layout(images);
 
-There should be a top-level `rules` key which should consist of an `array` of `rule objects` where each `rule object` contains at least one `condition` to describe when that rule should be triggered, as well as options describing what to be done when triggered.
+Note that this is a synchronous call since no IO is performed.  This call
+maybe expensive, depending on how many images you provide.
 
-`rules` are allowed to overlap and there can be multiple rules with overlapping `conditions` within the same `metadata.json` file.
+`opts` can include:
+ - `padding : int` number of pixels on each side of an image to pad out the
+   image.  Padding works by extending the border of the image.  Defaults to
+   `2`, which prevents most texture artifacts in OpenGL.
+ - `maxSize : int` the largest dimension of a spritesheet.  Spritesheets
+   cannot exceed this value in either width or height.  Defaults to `1024`.
+ - `powerOfTwoSheets : boolean` whether sheets should round their dimensions
+   up to the nearest power of two.  Defaults to `true`.
+ - `name : string` a prefix for spritesheet names
+ - `ext : string` a postfix for all spritesheet names
 
-A `rule` without any conditions will always occur.
+## Caching spritesheets
 
-###Let's walk through the creation of a `metadata.json` file.
+The spriter provides utility functions for reading and writing to a disk
+cache.  It verifies the integrity of the disk cache before returning cached
+results.  Call `loadCache(cacheFile : string, outputDirectory :
+string) : Promise<DiskCache>` to load a disk cache file:
 
-1) Let's first assume some directory structure for your resources.  
+    var group = 'group1';
+    var filenames = ['image1.png', 'image2.png'];
 
-~~~
-- foo.png
-- bar.png
-- baz.png
-backgrounds/
-	- bg1.png
-	- bg2.png
-	- bg3.png
-character/
-	walk/
-		- walk1.png
-		- walk2.png
-		- walk3.png
-	run/
-		- run1.png
-		- run2.png
-		- run3.png
+    spriter.loadCache('.my-cache-file', 'build/spritesheets/')
+        .get(group, filenames)
+        .then(function () {
+            // cached
+        })
+        .catch(Spriter.NotCachedError, function () {
+            // should resprite
+        });
 
-~~~
+The spriter is commonly used with groups of spritesheets, since a common use
+case is to sprite images that will probably be used together into the same
+spritesheet(s).  For example, all sprites in a common animation should be
+placed in a single group.  Compression is another example of grouping: images
+compressed as jpgs should be sprited separately from images compressed as pngs
+so that the resulting spritesheets can be compressed correctly.
 
-2) Let's say that we wanted to make sure that all of the images inside of the `backgrounds` directory were exported as jpegs when building for browser-mobile. We would first create a rules array inside of a `metadata.json` file inside of the `backgrounds` directory so that the directory structure would then look like:
+Calling `get` on `DiskCache` verifies the following:
 
-~~~
-foo.png
-bar.png
-baz.png
-backgrounds
-	- metadata.json
-	- bg1.png
-	- bg2.png
-	- bg3.png
-...
-~~~
+ - no files were added to the group
+ - no files were removed from the group
+ - no files have changed in the group (comparing modified times)
+ - the generated spritesheet files still exist
+ - the spritesheet data looks valid (every sheet has a name and images, every
+   image in the spritesheet is in the group)
 
-With the `metadata.json` file starting out as:
-
-~~~
-{
-	"rules": [
-	]
-}
-~~~  
-
-3) Now let's add a rule that will be triggered when we are building for browser-mobile
-
-~~~
-{
-	"rules": [
-		{	
-		 	"cond-target": "browser-mobile",
-		}
-	]
-}
-~~~  
-
-4) And now, force files to be jpegs under this condition
-
-~~~
-{
-	"rules": [
-		{	
-		 	"cond-target": "browser-mobile",
-		 	"forceJpeg": true
-		}
-	]
-}
-~~~  
-
-4a) Another way to accomplish the same result would be to place a `metadata.json` in the base directory and add a condition for files along with the current one for targets. So that the rule would only trigger for browser-mobile and on those specific files. Here is what that would look like: 
-
-~~~
-{
-	"rules": [
-		{	
-		 	"cond-target": "browser-mobile",
-		 	"cond-fileList": ["backgrounds/bg1.png", 
-							  "backgrounds/bg2.png", 
-							  "backgrounds/bg3.png"],
-		 	"forceJpeg": true
-		}
-	]
-}
-~~~  
-
-4b) or even simpler:
-
-~~~
-{
-	"rules": [
-		{	
-		 	"cond-target": "browser-mobile",
-		 	"cond-fileList": ["backgrounds"]
-		 	"forceJpeg": true
-		}
-	]
-}
-~~~  
-
-<a name="examples"></a>
-#Examples
-###Here are several examples with explanations
-
-`metadata.json`  
-
-~~~  
-{
-	"rules": [
-		{
- 			"cond-target": "browser-mobile",
-			"pngquant": {
-				"speed": 3,
-				"quality": "0-100"
-			},
-			"po2": false
-		},
-		{
- 			"cond-target": "native-android",
-			"pngquant": {
-				"speed": 8,
-				"quality": "0-100"
-			},
-			"po2": true
-		}
-	]
-}
-~~~  
-*stuff*  
-
----
-Given this directory structure:
-
-~~~  
-icons/
-	metadata.json
-	- go.png
-	- sms.png
-	alternative/
-		metadata.json
-		- go.png
-		- sms.png
-~~~
-
-***icons/metadata.json***  
-
-~~~  
-{
-	"rules": [
-		{
-			"cond-target": "browser-mobile",
-			"package": false,
-			"sprite": false			
-		}
-	]
-}
-~~~
-*stuff*  
-
-***icons/alternative/metadata.json***  
-
-~~~  
-{
-	"rules": [
-		{
-			"cond-target": "browser-mobile",
-			"package": true,
-			"sprite": true			
-		}
-	]
-}
-~~~
-*stuff*  
-
-However, this can all be done more simply by doing this in ***icons/metadata.json***
-
-~~~  
-{
-	"rules": [
-		{
-			"cond-target": "browser-mobile",
-			"cond-fileList": ["./go.png", "./sms.png"],
-			"package": true,
-			"sprite": true			
-		}
-	]
-}
-~~~
-
-<a name="api"></a>
-#API
-
-###Conditions 
-- `cond-buildMode` *string*    
-Accepts:  
-	- "debug"
-	- "release"
-
-- `cond-target` *string*    
-Accepts:  
-	- "native-android"  					
-	- "native-ios"  
-	- "browser-mobile"  	
-- `cond-fileList` *string array*    
-	- A list of files to process.  
-	- Filepaths are relative to the cwd of the `metadata.json`
-	- It's perfectly legal to give files in child directories
-	- Directories also count as files  
-	
-###Options  
-Options are applied onto items which pass the condition tests of a rule.  
-These items will be referenced as "items" below.  
-
-- `package` *boolean*  
-**default: true**  
-Whether or not to package the items in the build.  
-
-- `sprite` *boolean*  
-**default: true**  
-Whether or not to sprite the items on sprite sheets or leave them separate.
-
-- `scale` *number*  
-**default: 1.0**  
-How much to scale the items by.
-
-- `forceJpeg` *boolean*  
-**default: false**  
-Whether or not to force converting the items to jpeg
-
-- `po2` *boolean*  
-**default: true**  
-Whether or not the sprite sheets created from the items should be power's of two
-
-#####PNG Quant Options
-
-- `usePNGQuant` *boolean*  
-**default: false**  
-Whether or not to use PNGQuant
-
-- `PNGQuantSpeed` *number*  
-**default: 3**  
-
-- `PNGQuantQuality` *string*  
-**default: 0-100**  
