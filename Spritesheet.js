@@ -53,6 +53,13 @@ Spritesheet.prototype.add = function (imageInfo, x, y) {
   return this;
 };
 
+Spritesheet.prototype.addDuplicate = function (duplicate, original) {
+  duplicate.x = original.x;
+  duplicate.y = original.y;
+  duplicate.isDuplicate = true;
+  this.sprites.push(duplicate);
+};
+
 Spritesheet.prototype.composite = function () {
   this.buffer = new ImageBuffer({
     width: this.width,
@@ -60,7 +67,9 @@ Spritesheet.prototype.composite = function () {
   });
 
   this.sprites.forEach(function (sprite) {
-    this.blit(sprite);
+    if (!sprite.isDuplicate) {
+      this.blit(sprite);
+    }
   }, this);
 
   return this;

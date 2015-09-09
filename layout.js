@@ -17,6 +17,7 @@ module.exports = function (images, opts) {
   var sheets = [];
   var sheetIndex = 1;
   var sheet = createSpritesheet();
+  var seen = {};
 
   function createSpritesheet() {
     return new Spritesheet({
@@ -70,11 +71,22 @@ module.exports = function (images, opts) {
         if (x > 0) { x += padding; width += padding; }
         if (y > 0) { y += padding; height += padding; }
 
+        if (seen[image.hash]) {
+          var seenInfo = seen[image.hash];
+          seenInfo.sheet.addDuplicate(image, seenInfo.image);
+          images.splice(i, 1);
+          continue;
+        }
+
         if (width <= right - pt.x && height <= maxSize + padding - pt.y) {
           placed = true;
 
           images.splice(i, 1);
           sheet.add(image, x, y);
+          seen[image.hash] = {
+            image: image,
+            sheet: sheet
+          };
 
           var nextX = pt.x + width;
           var nextY = pt.y + height;
