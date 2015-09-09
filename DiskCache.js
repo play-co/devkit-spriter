@@ -43,11 +43,12 @@ function DiskCache(filename, data, outputDirectory) {
   this._outputDirectory = outputDirectory;
 }
 
-DiskCache.prototype.get = function (group, filenames) {
+DiskCache.prototype.getSheets = function (group, filenames) {
   var cache = this._data[group];
   if (!cache) {
     cache = this._data[group] = {
-      mtime: {}
+      mtime: {},
+      props: {}
     };
   }
 
@@ -112,10 +113,24 @@ DiskCache.prototype.get = function (group, filenames) {
     });
 };
 
-DiskCache.prototype.set = function (group, value) {
+DiskCache.prototype.setSheets = function (group, value) {
   var cache = this._data[group];
   if (cache) {
     cache.value = JSON.parse(JSON.stringify(value));
+  }
+};
+
+DiskCache.prototype.getProperty = function (group, key) {
+  var cache = this._data[group];
+  if (cache) {
+    return cache.props[key];
+  }
+};
+
+DiskCache.prototype.setProperty = function (group, key, value) {
+  var cache = this._data[group];
+  if (cache) {
+    cache.props[key] = JSON.parse(JSON.stringify(value));
   }
 };
 

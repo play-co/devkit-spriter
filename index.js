@@ -2,8 +2,8 @@ var DiskCache = require('./DiskCache');
 var ImageLoader = require('./ImageLoader');
 var layout = require('./layout');
 
-exports.loadImages = function (files) {
-  return new ImageLoader().load(files);
+exports.loadImages = function (files, scale) {
+  return new ImageLoader().load(files, scale);
 };
 
 /**

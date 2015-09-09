@@ -6,18 +6,25 @@ module.exports = ImageLoader;
 
 function ImageLoader() {}
 
-ImageLoader.prototype.load = function (images) {
+ImageLoader.prototype.load = function (images, scale) {
   return Promise.resolve(images)
     .bind(this)
     .map(function (image) {
-      return this.get(typeof image == 'string' ? image : image && image.path);
+      var filename = typeof image == 'string' ? image : image && image.path;
+      return this.get(filename, scale[filename]);
     });
 };
 
-ImageLoader.prototype.get = function (filename) {
+ImageLoader.prototype.get = function (filename, scale) {
   return new ImageBuffer({filename: filename})
     .load()
     .then(function (buffer) {
-      return new ImageInfo(filename, buffer);
+      if (scale && scale !== 1) {
+        var width = Math.ceil(buffer.bitmap.width * scale);
+        var height = Math.ceil(buffer.bitmap.height * scale);
+        buffer.resize(width, height);
+      }
+
+      return new ImageInfo(filename, buffer, scale);
     });
 };

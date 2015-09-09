@@ -2,7 +2,7 @@ var crypto = require('crypto');
 
 module.exports = ImageInfo;
 
-function ImageInfo(filename, buffer) {
+function ImageInfo(filename, buffer, scale) {
   this.x = 0;
   this.y = 0;
 
@@ -12,6 +12,7 @@ function ImageInfo(filename, buffer) {
   this.width = buffer.bitmap.width;
   this.height = buffer.bitmap.height;
   this.area = this.width * this.height;
+  this.scale = scale || 1;
   this.data = buffer.bitmap.data;
   this.depth = this.data.length / this.area;
   this.hasAlphaChannel = (this.depth == 4);
@@ -24,14 +25,6 @@ function ImageInfo(filename, buffer) {
 
 ImageInfo.prototype.recycle = function () {
   this.buffer = null;
-};
-
-ImageInfo.prototype.getScaledContentSize = function () {
-  var scale = this.scale;
-  var x = this.margin.left * scale | 0;
-  var y = this.margin.top * scale | 0;
-  var x2 = Math.ceil((this.width - this.margin.right) * scale);
-  var y2 = Math.ceil((this.width - this.margin.right) * scale);
 };
 
 ImageInfo.prototype.computeMargins = function() {
