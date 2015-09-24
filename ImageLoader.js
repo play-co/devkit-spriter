@@ -7,11 +7,22 @@ module.exports = ImageLoader;
 function ImageLoader() {}
 
 ImageLoader.prototype.load = function (images, scale) {
+  var errors = {};
   return Promise.resolve(images)
     .bind(this)
     .map(function (image) {
       var filename = typeof image == 'string' ? image : image && image.path;
-      return this.get(filename, scale[filename]);
+      return this.get(filename, scale[filename])
+        .catch(function (err) {
+          errors[filename] = err;
+        });
+    })
+    .filter(Boolean)
+    .then(function (images) {
+      return {
+        images: images,
+        errors: errors
+      };
     });
 };
 
