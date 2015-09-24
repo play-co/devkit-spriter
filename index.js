@@ -12,8 +12,9 @@ exports.loadImages = function (files, scale) {
 exports.sprite = layout;
 
 
-exports.loadCache = function (cacheFile, outputDirectory) {
-  return DiskCache.load(cacheFile, outputDirectory);
+exports.loadCache = function (cacheFile) {
+  return DiskCache.load(cacheFile);
 };
 
-exports.NotCachedError = DiskCache.NotCachedError;
+exports.verifySheets = require('./cachedSheets').verify;
+exports.NotCachedError = require('./NotCachedError');
