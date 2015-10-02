@@ -42,14 +42,14 @@ exports.verify = function (spritesheetsDirectory, filenames, mtimes, sheets) {
           throw new NotCachedError('new file: ' + filename);
         } else if (mtimes[filename] != currentMtime[filename]) {
           throw new NotCachedError('file updated: ' + filename);
-        } else {
-          delete mtimes[filename];
         }
       }
 
       // validate no files were removed from the group since the last spriting
       for (var filename in mtimes) {
-        throw new NotCachedError('file removed: ' + filename);
+        if (!(filename in currentMtime)) {
+          throw new NotCachedError('file removed: ' + filename);
+        }
       }
 
       return Promise.map(sheets, function (sheet) {
