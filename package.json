@@ -2,10 +2,10 @@
   "name": "devkit-spriter",
   "repository": "https://github.com/gameclosure/devkit-spriter",
   "author": "Martin Hunt",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "a 2D spriter for the DevKit game engine",
   "dependencies": {
-    "bluebird": "^2.9.34",
+    "bluebird": "^2.10.2",
     "graceful-fs": "^4.1.2",
     "jimp": "git+https://github.com/mgh/jimp.git"
   }
