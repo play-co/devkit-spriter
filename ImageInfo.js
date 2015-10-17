@@ -65,6 +65,16 @@ ImageInfo.prototype.computeMargins = function() {
     }
   }
 
+  // edge case: handle fully transparent images
+  if (marginTop + marginBottom === 2 * rows) {
+    marginTop = rows - 1;
+    marginBottom = 0;
+  }
+  if (marginLeft + marginRight === 2 * cols) {
+    marginLeft = cols - 1;
+    marginRight = 0;
+  }
+
   return {
     top: marginTop,
     right: marginRight,
