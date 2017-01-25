@@ -1,6 +1,6 @@
 var Spritesheet = require('./Spritesheet');
 
-var DEFAULT_MAX_SIZE = 1024;
+var DEFAULT_MAX_SIZE = 2048;
 var DEFAULT_PADDING = 2;
 
 /**
