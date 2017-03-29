@@ -1,80 +1,12 @@
 {
-  "_args": [
-    [
-      {
-        "raw": "devkit-spriter@git+https://github.com/gameclosure/devkit-spriter.git#es6",
-        "scope": null,
-        "escapedName": "devkit-spriter",
-        "name": "devkit-spriter",
-        "rawSpec": "git+https://github.com/gameclosure/devkit-spriter.git#es6",
-        "spec": "git+https://github.com/gameclosure/devkit-spriter.git#es6",
-        "type": "hosted",
-        "hosted": {
-          "type": "github",
-          "ssh": "git@github.com:gameclosure/devkit-spriter.git#es6",
-          "sshUrl": "git+ssh://git@github.com/gameclosure/devkit-spriter.git#es6",
-          "httpsUrl": "git+https://github.com/gameclosure/devkit-spriter.git#es6",
-          "gitUrl": "git://github.com/gameclosure/devkit-spriter.git#es6",
-          "shortcut": "github:gameclosure/devkit-spriter#es6",
-          "directUrl": "https://raw.githubusercontent.com/gameclosure/devkit-spriter/es6/package.json"
-        }
-      },
-      "/Users/jimbo3744/Library/Application Support/devkit/cache/devkit-core"
-    ]
-  ],
-  "_from": "git+https://github.com/gameclosure/devkit-spriter.git#es6",
-  "_id": "devkit-spriter@0.0.9",
-  "_inCache": true,
-  "_location": "/devkit-spriter",
-  "_phantomChildren": {},
-  "_requested": {
-    "raw": "devkit-spriter@git+https://github.com/gameclosure/devkit-spriter.git#es6",
-    "scope": null,
-    "escapedName": "devkit-spriter",
-    "name": "devkit-spriter",
-    "rawSpec": "git+https://github.com/gameclosure/devkit-spriter.git#es6",
-    "spec": "git+https://github.com/gameclosure/devkit-spriter.git#es6",
-    "type": "hosted",
-    "hosted": {
-      "type": "github",
-      "ssh": "git@github.com:gameclosure/devkit-spriter.git#es6",
-      "sshUrl": "git+ssh://git@github.com/gameclosure/devkit-spriter.git#es6",
-      "httpsUrl": "git+https://github.com/gameclosure/devkit-spriter.git#es6",
-      "gitUrl": "git://github.com/gameclosure/devkit-spriter.git#es6",
-      "shortcut": "github:gameclosure/devkit-spriter#es6",
-      "directUrl": "https://raw.githubusercontent.com/gameclosure/devkit-spriter/es6/package.json"
-    }
-  },
-  "_requiredBy": [
-    "/"
-  ],
-  "_resolved": "git+https://github.com/gameclosure/devkit-spriter.git#b418f627320b80cf315b321ddd017a5ade27c934",
-  "_shasum": "ecb2c9a330dcd977a30951d07bd24a38d526878c",
-  "_shrinkwrap": null,
-  "_spec": "devkit-spriter@git+https://github.com/gameclosure/devkit-spriter.git#es6",
-  "_where": "/Users/jimbo3744/Library/Application Support/devkit/cache/devkit-core",
-  "author": {
-    "name": "Martin Hunt"
-  },
-  "bugs": {
-    "url": "https://github.com/gameclosure/devkit-spriter/issues"
-  },
+  "name": "devkit-spriter",
+  "repository": "https://github.com/gameclosure/devkit-spriter",
+  "author": "Martin Hunt",
+  "version": "0.0.9",
+  "description": "a 2D spriter for the DevKit game engine",
   "dependencies": {
     "bluebird": "^2.10.2",
     "graceful-fs": "^4.1.2",
     "jimp": "git+https://github.com/mgh/jimp.git"
-  },
-  "description": "a 2D spriter for the DevKit game engine",
-  "devDependencies": {},
-  "gitHead": "b418f627320b80cf315b321ddd017a5ade27c934",
-  "homepage": "https://github.com/gameclosure/devkit-spriter#readme",
-  "name": "devkit-spriter",
-  "optionalDependencies": {},
-  "readme": "# devkit-spriter\n\nThe devkit-spriter package provides three functions for the devkit build process:\n\n 1. loading images\n 2. spriting images into spritesheets\n 3. caching spritesheets\n\n## Loading Images\n\nTo load images, use the `loadImages(filenames : String[]) :\nPromise<ImageInfo[]>` function:\n\n    var spriter = require('devkit-spriter');\n    spriter.loadImages(['image1.png', 'image2.png'])\n        .then(function (images) {\n            // images is an array of ImageInfo objects\n        });\n\nAn `ImageInfo` object is a representation of an image that the spriter can use\nto create spritesheets.  It has the following properites:\n\n - `x : int` the location of the image in a spritesheet\n - `y : int` the location of the image in a spritesheet\n - `filename : string` the full path to the image on disk\n - `hash : string` an md5 hash of the image bitmap\n - `buffer : ImageBuffer` the pixels of the image wrapped in a Jimp object\n   (see https://github.com/oliver-moran/jimp). An ImageBuffer extends the Jimp\n   base class with a `drawImage` call (based on the HTML5 canvas `drawImage`\n   call and promisifies `getBuffer` and `write`.\n - `width : int` the original image width\n - `height : int` the original image height\n - `area : int` the image's area\n - `data : Buffer` the raw data in a node `Buffer`, alias for `buffer.bitmap.data`\n - `depth : int` the number of channels for the image, e.g. 4 for rgba\n - `hasAlphaChannel : boolean` true if the depth is 4\n - `margin : {top : int, right : int, bottom : int, left : int}` the size of\n   the margins around the image (transparent regions in original image)\n - `contentWidth : int` the width minus the margins\n - `contentHeight : int` the height minus the margins\n - `contentArea : int` the content area, the number of pixels this image will\n   occupy on a spritesheet (excluding spritesheet padding)\n\n## Spriting images\n\nTo sprite images, first load them into ImageInfo objects.  Then call\n`layout(ImageInfo[], opts) : Spritesheet[]`:\n\n    var spritesheets = spriter.layout(images);\n\nNote that this is a synchronous call since no IO is performed.  This call\nmaybe expensive, depending on how many images you provide.\n\n`opts` can include:\n - `padding : int` number of pixels on each side of an image to pad out the\n   image.  Padding works by extending the border of the image.  Defaults to\n   `2`, which prevents most texture artifacts in OpenGL.\n - `maxSize : int` the largest dimension of a spritesheet.  Spritesheets\n   cannot exceed this value in either width or height.  Defaults to `1024`.\n - `powerOfTwoSheets : boolean` whether sheets should round their dimensions\n   up to the nearest power of two.  Defaults to `true`.\n - `name : string` a prefix for spritesheet names\n - `ext : string` a postfix for all spritesheet names\n\n## Caching spritesheets\n\nThe spriter provides utility functions for reading and writing to a disk\ncache.  It verifies the integrity of the disk cache before returning cached\nresults.  Call `loadCache(cacheFile : string, outputDirectory :\nstring) : Promise<DiskCache>` to load a disk cache file:\n\n    var group = 'group1';\n    var filenames = ['image1.png', 'image2.png'];\n\n    spriter.loadCache('.my-cache-file', 'build/spritesheets/')\n        .get(group, filenames)\n        .then(function () {\n            // cached\n        })\n        .catch(Spriter.NotCachedError, function () {\n            // should resprite\n        });\n\nThe spriter is commonly used with groups of spritesheets, since a common use\ncase is to sprite images that will probably be used together into the same\nspritesheet(s).  For example, all sprites in a common animation should be\nplaced in a single group.  Compression is another example of grouping: images\ncompressed as jpgs should be sprited separately from images compressed as pngs\nso that the resulting spritesheets can be compressed correctly.\n\nCalling `get` on `DiskCache` verifies the following:\n\n - no files were added to the group\n - no files were removed from the group\n - no files have changed in the group (comparing modified times)\n - the generated spritesheet files still exist\n - the spritesheet data looks valid (every sheet has a name and images, every\n   image in the spritesheet is in the group)\n\n",
-  "readmeFilename": "Readme.md",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/gameclosure/devkit-spriter.git"
-  },
-  "version": "0.0.9"
+  }
 }
