@@ -15,12 +15,13 @@ module.exports = function (images, opts) {
   var ext = opts.ext || '';
 
   var sheets = [];
+  var sheetIndex = 1;
   var sheet = createSpritesheet();
   var seen = {};
 
   function createSpritesheet() {
     return new Spritesheet({
-      name: name + ext,
+      name: name + (sheetIndex++) + ext,
       padding: padding,
       powerOfTwoSheets: powerOfTwoSheets
     });
