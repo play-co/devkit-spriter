@@ -16,7 +16,7 @@ ImageLoader.prototype.load = function (images, scale) {
         .catch(function (err) {
           errors[filename] = err;
         });
-    })
+    }, { concurrency: 1 })
     .filter(Boolean)
     .then(function (images) {
       return {
