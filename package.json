@@ -4,6 +4,9 @@
   "author": "Martin Hunt",
   "version": "0.0.9",
   "description": "a 2D spriter for the DevKit game engine",
+  "scripts": {
+    "test": "node ./tests"
+  },
   "dependencies": {
     "bluebird": "^2.10.2",
     "graceful-fs": "^4.1.2",
