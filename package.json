@@ -4,6 +4,7 @@
   "author": "Martin Hunt",
   "version": "0.0.9",
   "description": "a 2D spriter for the DevKit game engine",
+  "license": "MPL-2.0",
   "scripts": {
     "test": "node ./tests"
   },
