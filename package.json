@@ -4,8 +4,12 @@
   "author": "Martin Hunt",
   "version": "0.0.9",
   "description": "a 2D spriter for the DevKit game engine",
+  "license": "MPL-2.0",
+  "scripts": {
+    "test": "node ./tests"
+  },
   "dependencies": {
-    "bluebird": "^2.10.2",
+    "bluebird": "^3.5.0",
     "graceful-fs": "^4.1.2",
     "jimp": "^0.2.27"
   }
