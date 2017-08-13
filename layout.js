@@ -1,4 +1,9 @@
+
 /**
+ * 
+ * Update Aug 12, by Rhett Anderson
+ * 
+ * Cleaner loop. Smarter packing.
  * 
  * Updated Aug 9-10, 2017 by Rhett Anderson
  * 
@@ -9,8 +14,8 @@
  * Rather than rewrite the naive packer, I run it at different maximum widths (2048, 1024, 512) and compare
  * the outcomes. I choose the one with the smallest number of pixels (area).
  * 
- * This is a pretty brute-force solution to improve the texture memory situation. A better next step than
- * improving this would be to use a proven solution like texturePackerPro.
+ * This is a pretty brute-force solution to improve the texture memory situation. Packing algorithms are not
+ * trivial. A better next step than improving this would be to use a proven solution like texturePackerPro.
  * 
  */
 
@@ -18,7 +23,6 @@
 var Spritesheet = require('./Spritesheet');
 
 var DEFAULT_MAX_SIZE = 2048;
-var DEFAULT_MIN_SIZE = 512;
 var DEFAULT_PADDING = 2;
 
 /**
@@ -26,6 +30,8 @@ var DEFAULT_PADDING = 2;
  */
 
 module.exports = function (images, opts) {
+  var logdata = '';
+
   var bestArea = -1;
   var bestNumSheets = 1000;
   var bestX = DEFAULT_MAX_SIZE;
@@ -39,6 +45,7 @@ module.exports = function (images, opts) {
   var ext = opts.ext || '';
   var imageMemory = images;
 
+  // used for the calculation of the power of two that a texture will fit into
   function highestBitSet(value) {
     var r = 0;
     while ((value >>= 1) > 0) {
@@ -55,14 +62,10 @@ module.exports = function (images, opts) {
     });
   }
 
-  var finalPass = false;
-  while ((maxSizeX >= DEFAULT_MIN_SIZE) || finalPass) {
-    if (finalPass) {
+  var finalpass = 4;
+  for (var pass = 0; pass <= finalpass; pass++) {
+    if (pass == finalpass) {
       maxSizeX = bestX;
-    }
-    if (maxSizeX == DEFAULT_MIN_SIZE) {
-      maxSizeX = bestX;
-      finalPass = true;
     }
 
     images = imageMemory;
@@ -82,11 +85,18 @@ module.exports = function (images, opts) {
     }, this);
 
     images.sort(sortLargestAreaFirst);
+    var greatestX = 0;
+    var greatestY = 0;
+
+    var widest = 0;
+    for (var i = 0; i < images.length; i++) {
+      if (images[0].contentWidth + DEFAULT_PADDING > widest) {
+        widest = images[0].contentWidth + DEFAULT_PADDING;
+      }
+    }
 
     while (images.length) {
       var points = [{ x: 0, y: 0 }];
-      var wide = 0;
-      var tall = 0;
       while (points[0]) {
         var index = getTopLeftPoint(points);
         var pt = points[index];
@@ -127,12 +137,11 @@ module.exports = function (images, opts) {
 
           if (width <= right - pt.x && height <= maxSizeY + padding - pt.y) {
             placed = true;
-
-            if (pt.x + width > wide) {
-              wide = pt.x + width;
+            if (pt.x + width > greatestX) {
+              greatestX = pt.x + width;
             }
-            if (pt.y + height > tall) {
-              tall = pt.y + height;
+            if (pt.y + height > greatestY) {
+              greatestY = pt.y + height;
             }
 
             images.splice(i, 1);
@@ -189,8 +198,8 @@ module.exports = function (images, opts) {
       }
     }
 
-    var po2x = 2 << highestBitSet(wide - 1);
-    var po2y = 2 << highestBitSet(tall - 1);
+    var po2x = 2 << highestBitSet(greatestX - 1);
+    var po2y = 2 << highestBitSet(greatestY - 1);
     var po2area = po2x * po2y;
 
     if ((bestArea < 0 || po2area <= bestArea) && (sheets.length <= bestNumSheets)) {
@@ -200,18 +209,12 @@ module.exports = function (images, opts) {
       bestNumSheets = sheets.length;
     }
 
-    maxSizeX /= 2;
-
-    if (finalPass) {
-      finalPass = false;
-      maxSizeX = 0;
-    } else {
-      if (maxSizeX == DEFAULT_MIN_SIZE) {
-        finalPass = true;
-      }
-      if (tall > DEFAULT_MAX_SIZE) {
-        finalPass = true;
-      }
+    maxSizeX = po2x / 2 - DEFAULT_PADDING;
+    if (maxSizeX < widest) {
+      maxSizeX *= 2;
+    }
+    if (maxSizeX < 64) {
+      maxSizeX = 64;
     }
   }
 
