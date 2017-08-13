@@ -1,5 +1,9 @@
 
 /**
+ * Update Aug 13, by Rhett Anderson
+ * 
+ * Handle degenerate case of having only two bitmaps differently. This prevents the clouds from being split
+ * into two sheets.
  * 
  * Update Aug 12, by Rhett Anderson
  * 
@@ -30,8 +34,6 @@ var DEFAULT_PADDING = 2;
  */
 
 module.exports = function (images, opts) {
-  var logdata = '';
-
   var bestArea = -1;
   var bestNumSheets = 1000;
   var bestX = DEFAULT_MAX_SIZE;
@@ -94,6 +96,8 @@ module.exports = function (images, opts) {
         widest = images[0].contentWidth + DEFAULT_PADDING;
       }
     }
+
+    var numBitmaps = images.length;
 
     while (images.length) {
       var points = [{ x: 0, y: 0 }];
@@ -215,6 +219,9 @@ module.exports = function (images, opts) {
     }
     if (maxSizeX < 64) {
       maxSizeX = 64;
+    }
+    if (numBitmaps < 3) {
+      maxSizeX = DEFAULT_MAX_SIZE;
     }
   }
 
