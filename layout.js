@@ -1,12 +1,14 @@
 
 /**
+ * Update Aug 18, 2017 by Rhett Anderson
+ * 
+ * Keeps the safety of the previous version (no infinite loop) while allowing the code to find the better
+ * packing options of the earlier versions.
+ * 
  * Update Aug 16, 2017 by Rhett Anderson
  * 
- * Fixed infinite loop when spriting in cats data (also fixes one Everwing asset that was breaking into
- *  two sheets)
+ * Fixed infinite loop when spriting in cats data
  * Changed for loop to while loop and added some early exits for speeding up the process
- * (Note: some sprite sheets may get bigger and some may get smaller with this change. It should not
- *  be a big net change)
  * 
  * Update Aug 12, 2017 by Rhett Anderson
  * 
@@ -66,10 +68,11 @@ module.exports = function (images, opts) {
     });
   }
 
-  var finalpass = 5;
+  var finalpass = 3;
   var pass = 0;
 
   while(pass <= finalpass) {
+  //for (var pass = 0; pass <= finalpass; pass++) {
     if (pass == finalpass) {
       maxSizeX = bestX;
     }
@@ -102,6 +105,7 @@ module.exports = function (images, opts) {
     }
 
     var numBitmaps = images.length;
+    var proposedWidth = 2048;
 
     while (images.length) {
       var points = [{ x: 0, y: 0 }];
@@ -206,8 +210,8 @@ module.exports = function (images, opts) {
       }
     }
 
-    var po2x = 2 << highestBitSet(greatestX - padding);
-    var po2y = 2 << highestBitSet(greatestY - padding);
+    var po2x = 2 << highestBitSet(greatestX - padding - 1);
+    var po2y = 2 << highestBitSet(greatestY - padding - 1);
 
     var po2area = po2x * po2y;
 
@@ -217,9 +221,17 @@ module.exports = function (images, opts) {
       bestNumSheets = sheets.length;
     }
 
+    if (po2x > DEFAULT_MAX_SIZE) {
+      po2x = DEFAULT_MAX_SIZE;
+    }
+
     maxSizeX = po2x / 2;
     if (maxSizeX < widest) {
       maxSizeX *= 2;
+    }
+
+    if (proposedWidth < maxSizeX) {
+      maxSizeX = proposedWidth;
     }
 
     if ((maxSizeX < 64) && (pass < finalpass)) {
@@ -230,7 +242,12 @@ module.exports = function (images, opts) {
       pass = finalpass - 1;
     }
 
-    if (sheets > bestNumSheets) {
+    if ((sheets > bestNumSheets) && (pass < finalpass)) {
+      pass = finalpass - 1;
+    }
+
+    if ((greatestX > DEFAULT_MAX_SIZE/2) && (greatestY > DEFAULT_MAX_SIZE/2) && pass < finalpass) {
+      bestX = DEFAULT_MAX_SIZE;
       pass = finalpass - 1;
     }
 
@@ -238,6 +255,8 @@ module.exports = function (images, opts) {
       bestX = DEFAULT_MAX_SIZE;
       maxSizeX = bestX / 2;
     }
+
+    proposedWidth /= 2;
 
     pass++;
   }
