@@ -68,7 +68,7 @@ module.exports = function (images, opts) {
     });
   }
 
-  var finalpass = 3;
+  var finalpass = 2;
   var pass = 0;
 
   while(pass <= finalpass) {
