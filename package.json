@@ -7,6 +7,6 @@
   "dependencies": {
     "bluebird": "^2.10.2",
     "graceful-fs": "^4.1.2",
-    "jimp": "git+https://github.com/mgh/jimp.git"
+    "jimp": "^0.2.27"
   }
 }
