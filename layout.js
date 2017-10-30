@@ -1,5 +1,9 @@
 
 /**
+ * Update Oct 27, 2017 by Rhett Anderson
+ * 
+ * Fix infinite loop that happens when an image that's too large to fit spills out into a second sheet
+ * 
  * Update Aug 18, 2017 by Rhett Anderson
  * 
  * Keeps the safety of the previous version (no infinite loop) while allowing the code to find the better
@@ -72,7 +76,6 @@ module.exports = function (images, opts) {
   var pass = 0;
 
   while(pass <= finalpass) {
-  //for (var pass = 0; pass <= finalpass; pass++) {
     if (pass == finalpass) {
       maxSizeX = bestX;
     }
@@ -94,6 +97,7 @@ module.exports = function (images, opts) {
     }, this);
 
     images.sort(sortLargestAreaFirst);
+
     var greatestX = 0;
     var greatestY = 0;
 
@@ -107,7 +111,11 @@ module.exports = function (images, opts) {
     var numBitmaps = images.length;
     var proposedWidth = 2048;
 
+    var malformed = false;
     while (images.length) {
+      if (malformed) {
+        break;
+      }
       var points = [{ x: 0, y: 0 }];
       while (points[0]) {
         var index = getTopLeftPoint(points);
@@ -137,6 +145,13 @@ module.exports = function (images, opts) {
           var y = pt.y;
           var width = image.contentWidth + padding;
           var height = image.contentHeight + padding;
+
+          //if image is bigger than our sheet size, we're very done
+          if (width > maxSizeX) {
+            malformed = true;
+            break;
+          }
+
           if (x > 0) { x += padding; width += padding; }
           if (y > 0) { y += padding; height += padding; }
 
@@ -256,8 +271,12 @@ module.exports = function (images, opts) {
       maxSizeX = bestX / 2;
     }
 
-    proposedWidth /= 2;
+    if (malformed) {
+      bestX = DEFAULT_MAX_SIZE;
+      pass = finalpass - 1;
+    }
 
+    proposedWidth /= 2;
     pass++;
   }
 
